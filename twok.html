@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twok-optv - Sua Central de Entretenimento</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000000; /* Cor de fundo alterada para preto escuro */
+            color: #e2e8f0; /* Texto claro */
+        }
+        .scroll-container::-webkit-scrollbar {
+            height: 8px;
+        }
+        .scroll-container::-webkit-scrollbar-track {
+            background: #2d3748;
+            border-radius: 10px;
+        }
+        .scroll-container::-webkit-scrollbar-thumb {
+            background: #4a5568;
+            border-radius: 10px;
+        }
+        .scroll-container::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+        /* Estilos para o Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #1a202c;
+            padding: 2.5rem; /* Increased padding */
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5);
+            max-width: 90%;
+            width: 700px; /* Increased width */
+            position: relative;
+            max-height: 98vh; /* Adjusted to allow more height before scrolling */
+            overflow-y: auto; /* Enable scrolling for content if it exceeds max-height */
+        }
+        .modal-close-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #e2e8f0;
+            cursor: pointer;
+        }
+        .device-card {
+            background-color: #2d3748;
+            border-radius: 0.5rem;
+            padding: 1rem; /* Reduced padding */
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        .device-card:hover {
+            transform: translateY(-5px);
+            background-color: #4a5568;
+        }
+        .device-card i {
+            font-size: 3rem; /* Adjusted icon size */
+            margin-bottom: 0.75rem; /* Adjusted margin */
+        }
+        .device-card h4 {
+            font-size: 1.125rem; /* Adjusted title font size */
+            margin-bottom: 0.25rem; /* Adjusted margin */
+        }
+        .device-card p {
+            font-size: 0.875rem; /* Adjusted description font size */
+        }
+        .chat-messages {
+            height: 300px;
+            background-color: #2d3748;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .chat-message-user {
+            background-color: #4a5568;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            align-self: flex-end;
+            max-width: 80%;
+        }
+        .chat-message-bot {
+            background-color: #6b7280;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            align-self: flex-start;
+            max-width: 80%;
+        }
+
+        /* Keyframes para a animação de piscar */
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Classe para aplicar a animação de piscar */
+        .blinking-text {
+            animation: blink 1.5s infinite; /* 1.5 segundos de duração, repetição infinita */
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <!-- Cabeçalho -->
+    <header class="bg-gray-900 shadow-lg py-4 px-6 md:px-12 fixed w-full z-50">
+        <div class="container mx-auto flex justify-between items-center">
+            <!-- Logotipo -->
+            <a href="#" class="text-3xl font-bold text-red-600 tracking-wider rounded-lg p-2 hover:bg-gray-800 transition duration-300">
+                <img src="twok.png" alt="Twok-optv Logo" class="h-24 w-auto inline-block"> <!-- Increased height to h-24 -->
+            </a>
+
+            <!-- Navegação (Desktop) -->
+            <nav class="hidden md:flex space-x-8">
+                <a href="#" class="text-gray-300 hover:text-white transition duration-300 font-medium rounded-md px-3 py-2">Início</a>
+                <button id="teste-gratis-desktop" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full shadow-lg transition duration-300 transform hover:scale-105">
+                    TESTE GRÁTIS
+                </button>
+                <button id="suporte-desktop" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-full shadow-lg transition duration-300 transform hover:scale-105">
+                    SUPORTE
+                </button>
+                 <a href="https://wa.link/u9a99w" target="_blank" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full shadow-lg transition duration-300 transform hover:scale-105 flex items-center">
+                    <i class="fab fa-whatsapp mr-2"></i> WhatsApp
+                </a>
+            </nav>
+
+            <!-- Barra de Pesquisa (Removida) -->
+            <!-- <div class="relative hidden md:block">
+                <input type="text" placeholder="Buscar..." class="bg-gray-800 text-white rounded-full py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition duration-300">
+                <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div> -->
+
+            <!-- Botão do Menu Mobile -->
+            <button id="mobile-menu-button" class="md:hidden text-gray-300 hover:text-white focus:outline-none">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </div>
+
+        <!-- Menu Mobile (Oculto por padrão) -->
+        <div id="mobile-menu" class="hidden md:hidden bg-gray-800 mt-4 rounded-lg">
+            <nav class="flex flex-col space-y-2 p-4">
+                <a href="#" class="block text-gray-300 hover:text-white transition duration-300 font-medium rounded-md px-3 py-2">Início</a>
+                <button id="teste-gratis-mobile" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full shadow-lg transition duration-300 transform hover:scale-105 mt-2">
+                    TESTE GRÁTIS
+                </button>
+                <button id="suporte-mobile" class="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-full shadow-lg transition duration-300 transform hover:scale-105 mt-2">
+                    SUPORTE
+                </button>
+                <a href="https://wa.link/u9a99w" target="_blank" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full shadow-lg transition duration-300 transform hover:scale-105 mt-2 flex items-center justify-center">
+                    <i class="fab fa-whatsapp mr-2"></i> WhatsApp
+                </a>
+            </nav>
+            <!-- Barra de Pesquisa Mobile (Removida) -->
+            <!-- <div class="relative mt-4">
+                <input type="text" placeholder="Buscar..." class="bg-gray-700 text-white rounded-full py-2 pl-10 pr-4 w-full focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent">
+                <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div> -->
+        </div>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <main class="pt-20 pb-8">
+        <!-- Seção Hero -->
+        <section class="relative h-[50vh] md:h-[65vh] bg-cover bg-center flex items-center justify-center text-white px-4" style="background-image: url('WhatsApp Image 2025-07-22 at 08.35.25.jpeg');">
+            <div class="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent opacity-90"></div>
+            <div class="relative z-10 text-center max-w-3xl pt-[45vh]"> <!-- Increased pt-[35vh] to pt-[40vh] for more padding -->
+                <!-- Removido o h1 "O Twok-optv do streaming" -->
+                <p class="text-lg md:text-xl mb-6 drop-shadow-md blinking-text">O único sistema 100% sem travamentos!</p>
+                <!-- Removidos os botões "TESTE GRÁTIS" e "FALAR COM SUPORTE" da Hero Section -->
+            </div>
+        </section>
+
+        <!-- Seção de Visão Geral do Conteúdo -->
+        <section class="container mx-auto px-4 py-12">
+            <h2 class="text-4xl font-bold text-center mb-10 text-white">O Que Você Encontra no Twok-optv</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="bg-gray-800 rounded-xl shadow-lg p-6 text-center transform hover:scale-105 transition duration-300">
+                    <i class="fas fa-tv text-blue-600 text-5xl mb-4"></i>
+                    <h3 class="text-2xl font-semibold text-white mb-3">CANAIS</h3>
+                    <p class="text-gray-300">+5.000 canais<br>SD · HD · FULL HD</p>
+                </div>
+                <div class="bg-gray-800 rounded-xl shadow-lg p-6 text-center transform hover:scale-105 transition duration-300">
+                    <i class="fas fa-film text-blue-600 text-5xl mb-4"></i>
+                    <h3 class="text-2xl font-semibold text-white mb-3">FILMES</h3>
+                    <p class="text-gray-300">+10.000 filmes<br>Lançamentos inclusos</p>
+                </div>
+                <div class="bg-gray-800 rounded-xl shadow-lg p-6 text-center transform hover:scale-105 transition duration-300">
+                    <i class="fas fa-video text-blue-600 text-5xl mb-4"></i>
+                    <h3 class="text-2xl font-semibold text-white mb-3">SÉRIES</h3>
+                    <p class="text-gray-300">+2.500 séries<br>Temporadas completas</p>
+                </div>
+                <div class="bg-gray-800 rounded-xl shadow-lg p-6 text-center transform hover:scale-105 transition duration-300">
+                    <i class="fas fa-futbol text-blue-600 text-5xl mb-4"></i>
+                    <h3 class="text-2xl font-semibold text-white mb-3">FUTEBOL</h3>
+                    <p class="text-gray-300">Jogos ao vivo<br>Nacionais e internacionais</p>
+                </div>
+                <div class="bg-gray-800 rounded-xl shadow-lg p-6 text-center transform hover:scale-105 transition duration-300">
+                    <i class="fas fa-book-open text-blue-600 text-5xl mb-4"></i>
+                    <h3 class="text-2xl font-semibold text-white mb-3">NOVELAS</h3>
+                    <p class="text-gray-300">Turcas & mexicanas<br>Atualizadas</p>
+                </div>
+                <div class="bg-gray-800 rounded-xl shadow-lg p-6 text-center transform hover:scale-105 transition duration-300">
+                    <i class="fas fa-mask text-blue-600 text-5xl mb-4"></i>
+                    <h3 class="text-2xl font-semibold text-white mb-3">ANIME</h3>
+                    <p class="text-gray-300">Animes & Doramas<br>Legendados e dublados</p>
+                </div>
+                <div class="bg-gray-800 rounded-xl shadow-lg p-6 text-center transform hover:scale-105 transition duration-300">
+                    <i class="fas fa-book text-blue-600 text-5xl mb-4"></i>
+                    <h3 class="text-2xl font-semibold text-white mb-3">DOCS</h3>
+                    <p class="text-gray-300">Documentários<br>Diversas temáticas</p>
+                </div>
+                <div class="bg-gray-800 rounded-xl shadow-lg p-6 text-center transform hover:scale-105 transition duration-300">
+                    <i class="fas fa-globe text-blue-600 text-5xl mb-4"></i>
+                    <h3 class="text-2xl font-semibold text-white mb-3">GLOBAL</h3>
+                    <p class="text-gray-300">Canais internacionais<br>+ 20 países</p>
+                </div>
+            </div>
+            <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4 mt-10">
+                <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105" id="content-teste-gratis">
+                    TESTE GRÁTIS
+                </button>
+                <button class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105" id="content-falar-suporte">
+                    FALAR COM SUPORTE
+                </button>
+            </div>
+        </section>
+
+        <!-- Seção de Planos de Preços -->
+        <section id="planos" class="container mx-auto px-4 py-12">
+            <h2 class="text-4xl font-bold text-center mb-10 text-white">Nossos Planos</h2>
+            <div class="flex flex-col md:flex-row justify-center items-center md:items-stretch space-y-8 md:space-y-0 md:space-x-8">
+                <!-- Cartão de Plano 1 -->
+                <div class="bg-gray-800 rounded-xl shadow-2xl p-8 w-full max-w-sm flex flex-col items-center transform hover:scale-105 transition duration-300">
+                    <h3 class="text-3xl font-bold text-blue-600 mb-4">Básico</h3>
+                    <p class="text-5xl font-extrabold text-white mb-6">R$20<span class="text-xl font-normal text-gray-400">/mês</span></p>
+                    <ul class="text-gray-300 text-lg space-y-3 mb-8 text-center">
+                        <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i> 1 Tela Simultânea</li>
+                        <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i> Conteúdo em HD</li>
+                        <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i> Acesso a todo o catálogo</li>
+                        <li class="flex items-center"><i class="fas fa-times-circle text-red-500 mr-2"></i> Sem downloads offline</li>
+                    </ul>
+                    <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-10 rounded-full shadow-lg transition duration-300 transform hover:scale-105" id="plan-basic-button">
+                        Assinar Agora
+                    </button>
+                </div>
+
+                <!-- Cartão de Plano 2 -->
+                <div class="bg-gray-800 rounded-xl shadow-2xl p-8 w-full max-w-sm flex flex-col items-center transform hover:scale-105 transition duration-300 border-2 border-blue-600">
+                    <h3 class="text-3xl font-bold text-blue-600 mb-4">Premium</h3>
+                    <p class="text-5xl font-extrabold text-white mb-6">R$39<span class="text-xl font-normal text-gray-400">/mês</span></p>
+                    <ul class="text-gray-300 text-lg space-y-3 mb-8 text-center">
+                        <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i> 2 Telas Simultâneas</li>
+                        <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i> Conteúdo em Full HD</li>
+                        <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i> Acesso a todo o catálogo</li>
+                        <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i> Downloads Offline</li>
+                    </ul>
+                    <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-10 rounded-full shadow-lg transition duration-300 transform hover:scale-105" id="plan-premium-button">
+                        Assinar Agora
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção de Vantagens -->
+        <section class="container mx-auto px-4 py-12">
+            <h2 class="text-4xl font-bold text-center mb-10 text-white">Vantagens do Nosso Streaming</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Vantagem 1: Anti-Travamentos -->
+                <div class="bg-gray-800 rounded-xl shadow-lg p-6 text-center transform hover:scale-105 transition duration-300">
+                    <i class="fas fa-shield-alt text-blue-600 text-5xl mb-4"></i>
+                    <h3 class="text-2xl font-semibold text-white mb-3">Anti-Travamentos</h3>
+                    <p class="text-gray-300">Sistema 100% anti travamentos com tecnologia OTT-Plus, garantindo transmissão contínua mesmo com conexões instáveis.</p>
+                </div>
+                <!-- Vantagem 2: Servidores Dedicados -->
+                <div class="bg-gray-800 rounded-xl shadow-lg p-6 text-center transform hover:scale-105 transition duration-300">
+                    <i class="fas fa-server text-blue-600 text-5xl mb-4"></i>
+                    <h3 class="text-2xl font-semibold text-white mb-3">Servidores Dedicados</h3>
+                    <p class="text-gray-300">5 servidores dedicados estrategicamente distribuídos pelo Brasil, garantindo cobertura nacional com velocidade máxima.</p>
+                </div>
+                <!-- Vantagem 3: Estabilidade Total -->
+                <div class="bg-gray-800 rounded-xl shadow-lg p-6 text-center transform hover:scale-105 transition duration-300">
+                    <i class="fas fa-wave-square text-blue-600 text-5xl mb-4"></i>
+                    <h3 class="text-2xl font-semibold text-white mb-3">Estabilidade Total</h3>
+                    <p class="text-gray-300">Estabilidade total em jogos de futebol e eventos importantes, sem quedas ou interrupções durante momentos decisivos.</p>
+                </div>
+                <!-- Vantagem 4: Delay Mínimo -->
+                <div class="bg-gray-800 rounded-xl shadow-lg p-6 text-center transform hover:scale-105 transition duration-300">
+                    <i class="fas fa-tachometer-alt text-blue-600 text-5xl mb-4"></i>
+                    <h3 class="text-2xl font-semibold text-white mb-3">Delay Mínimo</h3>
+                    <p class="text-gray-300">Delay de no máximo 3 segundos em jogos de futebol, proporcionando uma experiência quase em tempo real nas transmissões esportivas.</p>
+                </div>
+                <!-- Vantagem 5: Suporte Especializado -->
+                <div class="bg-gray-800 rounded-xl shadow-lg p-6 text-center transform hover:scale-105 transition duration-300">
+                    <i class="fas fa-headset text-blue-600 text-5xl mb-4"></i>
+                    <h3 class="text-2xl font-semibold text-white mb-3">Suporte Especializado</h3>
+                    <p class="text-gray-300">Suporte todos os dias com uma equipe com mais de 20 atendentes especializados prontos para solucionar qualquer problema.</p>
+                </div>
+                <!-- Vantagem 6: Conteúdos Sob Demanda -->
+                <div class="bg-gray-800 rounded-xl shadow-lg p-6 text-center transform hover:scale-105 transition duration-300">
+                    <i class="fas fa-plus-circle text-blue-600 text-5xl mb-4"></i>
+                    <h3 class="text-2xl font-semibold text-white mb-3">Conteúdos Sob Demanda</h3>
+                    <p class="text-gray-300">Conteúdos solicitados à plataforma são adicionados em até 24h, mantendo nosso catálogo sempre atualizado com seus pedidos.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção de Chamada para Ação -->
+        <section class="container mx-auto px-4 py-12 text-center bg-gray-800 rounded-xl shadow-lg">
+            <h2 class="text-4xl font-bold mb-6 text-white">Comece a assistir agora</h2>
+            <p class="text-lg text-gray-300 mb-8">Experimente sem compromisso. Cancele quando quiser, sem taxas adicionais. Tecnologia anti-travamento exclusiva.</p>
+            <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105" id="cta-teste-gratis">
+                    Experimente Grátis
+                </button>
+                <button class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105" id="cta-falar-suporte">
+                    FALAR COM SUPORTE
+                </button>
+            </div>
+        </section>
+
+        <!-- Seção de Depoimentos -->
+        <section class="container mx-auto px-4 py-12">
+            <h2 class="text-4xl font-bold text-center mb-10 text-white">O Que Nossos Clientes Dizem</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Depoimento 1 -->
+                <div class="bg-gray-800 rounded-xl shadow-lg p-6 transform hover:scale-105 transition duration-300">
+                    <div class="flex items-center mb-4">
+                        <img src="https://placehold.co/80x80/667EEA/FFFFFF?text=JP" alt="Foto de Perfil" class="w-16 h-16 rounded-full mr-4 object-cover">
+                        <div>
+                            <p class="text-xl font-semibold text-white">João Pedro</p>
+                            <div class="text-yellow-400">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-300 italic">"A Twok-optv revolucionou a forma como assisto filmes e séries. O catálogo é incrível e a qualidade de streaming é impecável!"</p>
+                </div>
+                <!-- Depoimento 2 -->
+                <div class="bg-gray-800 rounded-xl shadow-lg p-6 transform hover:scale-105 transition duration-300">
+                    <div class="flex items-center mb-4">
+                        <img src="https://placehold.co/80x80/38B2AC/FFFFFF?text=MA" alt="Foto de Perfil" class="w-16 h-16 rounded-full mr-4 object-cover">
+                        <div>
+                            <p class="text-xl font-semibold text-white">Maria Antônia</p>
+                            <div class="text-yellow-400">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-300 italic">"Adoro a variedade de conteúdo e a facilidade de uso. O plano com 2 telas é perfeito para minha família. Recomendo!"</p>
+                </div>
+                <!-- Depoimento 3 -->
+                <div class="bg-gray-800 rounded-xl shadow-lg p-6 transform hover:scale-105 transition duration-300">
+                    <div class="flex items-center mb-4">
+                        <img src="https://placehold.co/80x80/F6AD55/FFFFFF?text=RC" alt="Foto de Perfil" class="w-16 h-16 rounded-full mr-4 object-cover">
+                        <div>
+                            <p class="text-xl font-semibold text-white">Ricardo Costa</p>
+                            <div class="text-yellow-400">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-300 italic">"Finalmente um serviço de streaming que entende o que eu quero! A busca é eficiente e as recomendações são sempre ótimas."</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal de Seleção de Dispositivo e Chat de Suporte -->
+    <div id="device-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button class="modal-close-button" id="close-modal">&times;</button>
+
+            <!-- View 1: Seleção de Dispositivo -->
+            <div id="device-selection-view">
+                <h2 class="text-3xl font-bold text-white mb-6 text-center">Selecione seu dispositivo</h2>
+                <p class="text-gray-300 text-center mb-8">Em qual dispositivo você gostaria de assistir?</p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                    <div class="device-card">
+                        <i class="fas fa-tv text-blue-600 text-3xl mb-2"></i>
+                        <h4 class="text-lg font-semibold text-white">Smart TV</h4>
+                        <p class="text-sm text-gray-400">Samsung, LG, Roku e outras</p>
+                    </div>
+                    <div class="device-card">
+                        <i class="fab fa-android text-blue-600 text-3xl mb-2"></i>
+                        <h4 class="text-lg font-semibold text-white">TV Android</h4>
+                        <p class="text-sm text-gray-400">TVs com sistema Android TV</p>
+                    </div>
+                    <div class="device-card">
+                        <i class="fas fa-box text-blue-600 text-3xl mb-2"></i>
+                        <h4 class="text-lg font-semibold text-white">TV Box</h4>
+                        <p class="text-sm text-gray-400">Aparelhos que transformam sua TV em Smart</p>
+                    </div>
+                    <div class="device-card">
+                        <i class="fas fa-projector text-blue-600 text-3xl mb-2"></i>
+                        <h4 class="text-lg font-semibold text-white">Projetor Android</h4>
+                        <p class="text-sm text-gray-400">Projetores com sistema Android</p>
+                    </div>
+                    <div class="device-card">
+                        <i class="fas fa-mobile-alt text-blue-600 text-3xl mb-2"></i>
+                        <h4 class="text-lg font-semibold text-white">Celular</h4>
+                        <p class="text-sm text-gray-400">Android e iOS</p>
+                    </div>
+                    <div class="device-card">
+                        <i class="fab fa-amazon text-blue-600 text-3xl mb-2"></i>
+                        <h4 class="text-lg font-semibold text-white">Firestick</h4>
+                        <p class="text-sm text-gray-400">Amazon Fire TV Stick</p>
+                    </div>
+                    <div class="device-card">
+                        <i class="fas fa-chromecast text-blue-600 text-3xl mb-2"></i>
+                        <h4 class="text-lg font-semibold text-white">Chromecast</h4>
+                        <p class="text-sm text-gray-400">Google Chromecast</p>
+                    </div>
+                    <div class="device-card">
+                        <i class="fas fa-laptop text-blue-600 text-3xl mb-2"></i>
+                        <h4 class="text-lg font-semibold text-white">PC/Notebook</h4>
+                        <p class="text-sm text-gray-400">Windows, Mac e Linux</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View 2: Chat de Suporte (Input de Telefone) -->
+            <div id="chat-support-input-view" class="hidden">
+                <h2 class="text-3xl font-bold text-white mb-6 text-center">Chat de Suporte</h2>
+                <p class="text-gray-300 text-center mb-8">Digite seu número de telefone para acessar o chat de suporte</p>
+                <div class="mb-6">
+                    <label for="phone-number" class="block text-gray-300 text-lg font-semibold mb-2">Número de Telefone</label>
+                    <input type="tel" id="phone-number" class="w-full bg-gray-700 text-white rounded-md py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent" placeholder="DDD + número" pattern="[0-9]{2}[0-9]{8,9}" required>
+                </div>
+                <p class="text-gray-500 text-sm mb-8 text-center">Seu número de telefone será usado para identificar suas conversas com nosso suporte. Cadastre apenas com DDD + número.</p>
+                <button id="enter-chat-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105 w-full">
+                    Entrar no Chat de Suporte
+                </button>
+            </div>
+
+            <!-- View 3: Interface do Chat -->
+            <div id="chat-interface-view" class="hidden">
+                <h2 class="text-3xl font-bold text-white mb-6 text-center">Conversa com o Suporte</h2>
+                <div class="chat-messages mb-4" id="chat-messages">
+                    <!-- Mensagens do chat serão adicionadas aqui -->
+                    <div class="chat-message-bot">Olá! Como posso ajudar você hoje?</div>
+                </div>
+                <div class="flex gap-2">
+                    <input type="text" id="chat-input" class="flex-grow bg-gray-700 text-white rounded-md py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent" placeholder="Digite sua mensagem...">
+                    <button id="send-chat-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105">
+                        Enviar
+                    </button>
+                </div>
+            </div>
+
+            <button id="back-button" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105 w-full mt-8">
+                Voltar
+            </button>
+        </div>
+    </div>
+
+    <!-- Rodapé -->
+    <footer class="bg-gray-900 py-10 px-4 md:px-12 text-gray-400">
+        <div class="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
+            <!-- Coluna 1: Streaming Plus -->
+            <div>
+                <h3 class="text-2xl font-bold text-white mb-4">Streaming Plus</h3>
+                <p class="text-gray-400">A melhor experiência de streaming, com conteúdo exclusivo e tecnologia de ponta. 100% sem travamentos!</p>
+            </div>
+
+            <!-- Coluna 2: Conteúdo -->
+            <div>
+                <h3 class="text-xl font-semibold text-white mb-4">Conteúdo</h3>
+                <ul class="space-y-2">
+                    <li><a href="#" class="hover:text-white transition duration-300">Canais Ao Vivo</a></li>
+                    <li><a href="#" class="hover:text-white transition duration-300">Filmes</a></li>
+                    <li><a href="#" class="hover:text-white transition duration-300">Séries</a></li>
+                    <li><a href="#" class="hover:text-white transition duration-300">Lançamentos</a></li>
+                </ul>
+            </div>
+
+            <!-- Coluna 3: Ajuda -->
+            <div>
+                <h3 class="text-xl font-semibold text-white mb-4">Ajuda</h3>
+                <ul class="space-y-2">
+                    <li><a href="#" id="footer-faq" class="hover:text-white transition duration-300">FAQ</a></li>
+                    <li><a href="#" id="footer-contato" class="hover:text-white transition duration-300">Contato</a></li>
+                    <li><a href="#" id="footer-tutoriais" class="hover:text-white transition duration-300">Tutoriais</a></li>
+                    <li><a href="#" id="footer-suporte" class="hover:text-white transition duration-300">Suporte</a></li>
+                </ul>
+            </div>
+
+            <!-- Coluna 4: Legal -->
+            <div>
+                <h3 class="text-xl font-semibold text-white mb-4">Legal</h3>
+                <ul class="space-y-2">
+                    <li><a href="#" class="hover:text-white transition duration-300">Termos de serviço</a></li>
+                    <li><a href="#" class="hover:text-white transition duration-300">Privacidade</a></li>
+                    <li><a href="#" class="hover:text-white transition duration-300">Licenças</a></li>
+                    <li><a href="#" class="hover:text-white transition duration-300">Cookies</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="text-center mt-8 pt-6 border-t border-gray-700">
+            <p>&copy; 2024 Twok-optv. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Alternar menu mobile
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            // Lógica do Modal
+            const deviceModal = document.getElementById('device-modal');
+            const closeModalButton = document.getElementById('close-modal');
+            const backButton = document.getElementById('back-button');
+
+            const deviceSelectionView = document.getElementById('device-selection-view');
+            const chatSupportInputView = document.getElementById('chat-support-input-view');
+            const chatInterfaceView = document.getElementById('chat-interface-view');
+
+            // Botões que abrem o modal de teste grátis
+            const testeGratisDesktop = document.getElementById('teste-gratis-desktop');
+            const testeGratisMobile = document.getElementById('teste-gratis-mobile');
+            const heroTesteGratis = document.getElementById('hero-teste-gratis');
+            const contentTesteGratis = document.getElementById('content-teste-gratis');
+
+            // Botões que abrem o modal de suporte
+            const suporteDesktop = document.getElementById('suporte-desktop');
+            const suporteMobile = document.getElementById('suporte-mobile');
+            const heroFalarSuporte = document.getElementById('hero-falar-suporte');
+            const contentFalarSuporte = document.getElementById('content-falar-suporte');
+
+            // Botões e elementos do chat
+            const enterChatButton = document.getElementById('enter-chat-button');
+            const chatInput = document.getElementById('chat-input');
+            const sendChatButton = document.getElementById('send-chat-button');
+            const chatMessages = document.getElementById('chat-messages');
+            const phoneNumberInput = document.getElementById('phone-number');
+
+            // Get all device cards
+            const deviceCards = document.querySelectorAll('.device-card');
+
+            // Get "Assinar Agora" buttons
+            const planBasicButton = document.getElementById('plan-basic-button');
+            const planPremiumButton = document.getElementById('plan-premium-button');
+
+            // Get footer help links
+            const footerFaq = document.getElementById('footer-faq');
+            const footerContato = document.getElementById('footer-contato');
+            const footerTutoriais = document.getElementById('footer-tutoriais');
+            const footerSuporte = document.getElementById('footer-suporte');
+
+
+            function showView(view) {
+                deviceSelectionView.classList.add('hidden');
+                chatSupportInputView.classList.add('hidden');
+                chatInterfaceView.classList.add('hidden');
+                view.classList.remove('hidden');
+            }
+
+            function openModal(viewToShow = 'device-selection') {
+                deviceModal.classList.remove('hidden');
+                if (viewToShow === 'device-selection') {
+                    showView(deviceSelectionView);
+                } else if (viewToShow === 'chat-support-input') {
+                    showView(chatSupportInputView);
+                } else if (viewToShow === 'chat-interface') {
+                    showView(chatInterfaceView);
+                }
+            }
+
+            function closeModal() {
+                deviceModal.classList.add('hidden');
+                // Reset to device selection view and clear chat messages when closing the modal completely
+                showView(deviceSelectionView);
+                chatMessages.innerHTML = '<div class="chat-message-bot">Olá! Como posso ajudar você hoje?</div>'; // Reset chat
+                phoneNumberInput.value = ''; // Clear phone number
+            }
+
+            // Event listeners for opening the modal
+            if (testeGratisDesktop) testeGratisDesktop.addEventListener('click', () => openModal('device-selection'));
+            if (testeGratisMobile) testeGratisMobile.addEventListener('click', () => openModal('device-selection'));
+            if (heroTesteGratis) heroTesteGratis.addEventListener('click', () => openModal('device-selection'));
+            if (contentTesteGratis) contentTesteGratis.addEventListener('click', () => openModal('device-selection'));
+
+            // Botões de suporte abrem o modal na vista de entrada de telefone para chat
+            if (suporteDesktop) suporteDesktop.addEventListener('click', () => openModal('chat-support-input'));
+            if (suporteMobile) suporteMobile.addEventListener('click', () => openModal('chat-support-input'));
+            if (heroFalarSuporte) heroFalarSuporte.addEventListener('click', () => openModal('chat-support-input'));
+            if (contentFalarSuporte) contentFalarSuporte.addEventListener('click', () => openModal('chat-support-input'));
+
+            // Event listeners para os links de ajuda do rodapé
+            if (footerFaq) footerFaq.addEventListener('click', (e) => {
+                e.preventDefault(); // Previne a navegação padrão do link
+                openModal('chat-support-input');
+            });
+            if (footerContato) footerContato.addEventListener('click', (e) => {
+                e.preventDefault();
+                openModal('chat-support-input');
+            });
+            if (footerTutoriais) footerTutoriais.addEventListener('click', (e) => {
+                e.preventDefault();
+                openModal('chat-support-input');
+            });
+            if (footerSuporte) footerSuporte.addEventListener('click', (e) => {
+                e.preventDefault();
+                openModal('chat-support-input');
+            });
+
+
+            // Event listener for closing the modal
+            if (closeModalButton) closeModalButton.addEventListener('click', closeModal);
+
+            // Event listener for the "Voltar" button inside the modal
+            if (backButton) backButton.addEventListener('click', () => {
+                if (!chatInterfaceView.classList.contains('hidden')) {
+                    // Se estiver na interface de chat, volta para a entrada de telefone
+                    showView(chatSupportInputView);
+                } else if (!chatSupportInputView.classList.contains('hidden')) {
+                    // Se estiver na entrada de telefone, volta para a seleção de dispositivo
+                    showView(deviceSelectionView);
+                } else {
+                    // Se estiver na seleção de dispositivo, fecha o modal
+                    closeModal();
+                }
+            });
+
+            // Event listener for clicking outside the modal content
+            if (deviceModal) deviceModal.addEventListener('click', (e) => {
+                if (e.target === deviceModal) {
+                    closeModal();
+                }
+            });
+
+            // Event listeners para os cartões de dispositivo (agora abrem WhatsApp)
+            deviceCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const deviceName = card.querySelector('h4').textContent;
+                    // Codifica a mensagem para URL
+                    const encodedMessage = encodeURIComponent(`Olá! Gostaria de saber mais sobre o Twok-optv para o meu dispositivo: ${deviceName}.`);
+                    const whatsappLink = `https://wa.link/u9a99w?text=${encodedMessage}`;
+                    window.open(whatsappLink, '_blank');
+                    closeModal(); // Fecha o modal após abrir o WhatsApp
+                });
+            });
+
+            // Event listeners para os botões "Assinar Agora" dos planos
+            if (planBasicButton) {
+                planBasicButton.addEventListener('click', () => {
+                    const planName = "Plano Básico (R$20/mês)";
+                    const encodedMessage = encodeURIComponent(`Olá! Tenho interesse em assinar o ${planName}.`);
+                    const whatsappLink = `https://wa.link/u9a99w?text=${encodedMessage}`;
+                    window.open(whatsappLink, '_blank');
+                });
+            }
+
+            if (planPremiumButton) {
+                planPremiumButton.addEventListener('click', () => {
+                    const planName = "Plano Premium (R$39/mês)";
+                    const encodedMessage = encodeURIComponent(`Olá! Tenho interesse em assinar o ${planName}.`);
+                    const whatsappLink = `https://wa.link/u9a99w?text=${encodedMessage}`;
+                    window.open(whatsappLink, '_blank');
+                });
+            }
+
+            // Event listener para o botão "Entrar no Chat de Suporte"
+            if (enterChatButton) enterChatButton.addEventListener('click', () => {
+                const phoneNumber = phoneNumberInput.value.trim();
+                if (phoneNumber.match(/^[0-9]{2}[0-9]{8,9}$/)) {
+                    showView(chatInterfaceView);
+                    // Aqui você poderia iniciar a conexão real com o chat de suporte
+                } else {
+                    alert('Por favor, digite um número de telefone válido (DDD + número).');
+                }
+            });
+
+            // Lógica de envio de mensagens do chat
+            function sendMessage() {
+                const message = chatInput.value.trim();
+                if (message) {
+                    // Adicionar mensagem do usuário
+                    const userMessageDiv = document.createElement('div');
+                    userMessageDiv.classList.add('chat-message-user');
+                    userMessageDiv.textContent = message;
+                    chatMessages.appendChild(userMessageDiv);
+
+                    // Simular resposta do bot
+                    setTimeout(() => {
+                        const botMessageDiv = document.createElement('div');
+                        botMessageDiv.classList.add('chat-message-bot');
+                        botMessageDiv.textContent = 'Obrigado por sua mensagem! Um de nossos atendentes responderá em breve.';
+                        chatMessages.appendChild(botMessageDiv);
+                        chatMessages.scrollTop = chatMessages.scrollHeight; // Rolar para o final
+                    }, 1000);
+
+                    chatInput.value = ''; // Limpar input
+                    chatMessages.scrollTop = chatMessages.scrollHeight; // Rolar para o final
+                }
+            }
+
+            if (sendChatButton) sendChatButton.addEventListener('click', sendMessage);
+            if (chatInput) chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
